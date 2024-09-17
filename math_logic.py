@@ -28,9 +28,7 @@ class LogicalExpression:
     
     def getOperators(self) -> list[str]:
         operators = []
-        variables = self.getVariables()
-        print(f"Variables: {variables}") #!debug
-        
+        variables = self.getVariables()        
         #we need to check which operators aperar in the string
         operator_names = ['+', '-', '*', '/', '(', ')', 'and', 'or', 'not', '->', '<->', '<-', 'xor']
         expressionWithoutVariablesAndSpaces = self.expression.replace(' ', '')
@@ -40,18 +38,17 @@ class LogicalExpression:
         for op in operator_names:
             if op in expressionWithoutVariablesAndSpaces:
                 operators.append(op)
-        print(f"Operators: {operators}") #!debug
         return operators
     
     #region Logical operators
-    def andOperator(self, a, b) -> bool:
+    def andOperator(self, a: bool, b: bool) -> bool:
         match (a, b):
             case (True, True):
                 return True
             case (_, _):
                 return False
     
-    def orOperator(self, a, b) -> bool:
+    def orOperator(self, a: bool, b) -> bool:
         match (a, b):
             case (False, False):
                 return False
@@ -71,7 +68,21 @@ class LogicalExpression:
         return not a or b
     #endregion        
     
-    def createExpression(self):
+    def createLogicalList(self) -> list:
+        #we need to check the order of variables and operators to create a list of logical operations
+        expression = self.expression
+        variables = self.getVariables()
+        operators = self.getOperators()
+        expression = expression.replace(' ', '')
+        for op in operators:
+            expression = expression.replace(op, f' {op} ')
+        logicalList = expression.split()
+        print(f"Logical list: {logicalList}") #!debug
+        
+            
+            
+        
+        
         pass
         
     def truthTable(self):
@@ -92,6 +103,7 @@ class LogicalExpression:
         print(f"Expression: {self.expression}")
         self.getVariables()
         self.getOperators()
+        self.createLogicalList()
         # self.evaluate(a=True, b=False, c=True)
 
 if __name__ == "__main__":
