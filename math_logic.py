@@ -1,7 +1,7 @@
 import numpy as np
 import itertools
 import re
-
+import pandas as pd
 class LogicalExpression:
     
     def __init__(self, expression):
@@ -68,7 +68,7 @@ class LogicalExpression:
         return not a or b
     #endregion        
     
-    def createLogicalList(self) -> list:
+    def createLogicalList(self) -> list[str]:
         #we need to check the order of variables and operators to create a list of logical operations
         expression = self.expression
         variables = self.getVariables()
@@ -78,17 +78,23 @@ class LogicalExpression:
             expression = expression.replace(op, f' {op} ')
         logicalList = expression.split()
         print(f"Logical list: {logicalList}") #!debug
+        return logicalList
         
-            
-            
-        
-        
-        pass
-        
-    def truthTable(self):
+    def truthTable(self, variables: list[str]) -> pd.DataFrame:
         variables = self.getVariables()
         n = len(variables)
-        rows = 2**n 
+        rows = 2**n
+        combinations = list(itertools.product([False, True], repeat=n))
+        # combinations = [list(comb) for comb in combinations]
+        combinations = np.array(combinations)
+        # print(f"Combinations: {combinations}") #!debug
+        # print(f'variables: {variables}') #!debug
+        #we initilize the truth table with the variables all in false then we will change them
+        truthTable = pd.DataFrame(combinations, columns=variables)
+        truthTable['result'] = False
+        print('truthTable:') #!debug
+        print(truthTable) #!debug
+        pass
         
     # def evaluate(self, **kwargs):
     #     try:
@@ -101,9 +107,11 @@ class LogicalExpression:
     
     def debugger(self):
         print(f"Expression: {self.expression}")
-        self.getVariables()
-        self.getOperators()
-        self.createLogicalList()
+        variables = self.getVariables()
+        operators = self.getOperators()
+        logicalList = self.createLogicalList()
+        self.truthTable(variables)
+        
         # self.evaluate(a=True, b=False, c=True)
 
 if __name__ == "__main__":
