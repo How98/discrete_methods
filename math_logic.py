@@ -2,6 +2,7 @@ import numpy as np
 import itertools
 import re
 import pandas as pd
+import sys
 class LogicalExpression:
     
     def __init__(self, expression):
@@ -81,7 +82,7 @@ class LogicalExpression:
         numberOfParenthesis = logicalList.count('(')
         parenthesisIndexes = []
         alreadyEvaluatedIdexes = []
-        for i in range(numberOfParenthesis):
+        for _ in range(numberOfParenthesis):
             # print(f'iteration {i}, alreadyEvaluatedIdexes: {alreadyEvaluatedIdexes}') #!debug
             openIndex = logicalList.index('(')
             # print(f'openIndex: {openIndex}') #!debug
@@ -143,7 +144,7 @@ class LogicalExpression:
         print(truthTable) #!debug
         return truthTable
     
-    def individualEvaluator(self, variables: list[dict[str, bool]], logicallist: list[str]) -> bool:
+    def individualEvaluator(self, variables: dict[str, bool], logicallist: list[str]) -> bool:
         '''
         This function will evaluate the logical list with the a given set of variables with defined boolean values
         '''
@@ -161,9 +162,48 @@ class LogicalExpression:
                     logicalIndex = LogicalPriority.index(element)
                     print(f'element: {element}, logicalIndex: {logicalIndex}') #!debug
                     #now we need a function to evaluate based on the logical index
+                    #! WIP
             pass
             
-        
+    def operatorEvaluator(self, operator: str, opereatorIndex: int, logicalList: list, variables: dict[str, bool]) -> bool:
+        for index, element in enumerate(logicalList):
+            for variable in list(variables.keys()):
+                if element == variables:
+                    logicalList[index] = variables[variable]
+        print(f' debug logicalList: {logicalList}') #!debug
+        match operator:
+            case 'and':
+                expression = logicalList[opereatorIndex-1:opereatorIndex+1]
+                result = self.andOperator(expression[0], expression[2])
+                return result
+            case 'or':
+                expression = logicalList[opereatorIndex-1:opereatorIndex+1]
+                result = self.orOperator(expression[0], expression[2])
+                return result
+            case 'not':
+                expression = logicalList[opereatorIndex:opereatorIndex+1]
+                result = self.notOperator(expression[1])
+                return result
+            case '->':
+                expression = logicalList[opereatorIndex-1:opereatorIndex+1]
+                result = self.impliesOperator(expression[0], expression[2])
+                return result
+            case '<-':
+                expression = logicalList[opereatorIndex-1:opereatorIndex+1]
+                result = self.impliesOperator(expression[2], expression[0])
+                return result
+            case '<->':
+                expression = logicalList[opereatorIndex-1:opereatorIndex+1]
+                result = self.xorOperator(expression[0], expression[2])
+                return result
+            case 'xor':
+                expression = logicalList[opereatorIndex-1:opereatorIndex+1]
+                result = self.xorOperator(expression[0], expression[2])
+                return result
+            case __:
+                print('wrong logic idiot')
+                sys.exit(1)
+        pass    
            
     # def evaluate(self, **kwargs):
     #     try:
@@ -193,7 +233,7 @@ class LogicalExpression:
         print(f'parenthesis: {parenthesis}')
         self.truthTable(variables)
         print('step 5:')
-        self.individualEvaluator([('a', True), ('b', False), ('c', True)], logicalList)
+        self.individualEvaluator({'a': True, 'b': True, 'c': True}, logicalList)
         # self.evaluate(a=True, b=False, c=True)
 
 if __name__ == "__main__":
