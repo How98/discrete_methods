@@ -12,16 +12,21 @@ class LogicalExpression:
         #we need to define the mathematical operators to devide the string input
         operators = ['+', '-', '*', '/', '(', ')', 'and', 'or', 'not', '->', '<->', '<-', 'xor', 'xand']
         temp = self.expression
-        for op in operators:
-            iterVar = r'\b' + re.escape(op) + r'\b'
-            temp = re.sub(iterVar, ' ', temp)
-        variables = list(set(temp.split()))
+        # for op in operators:
+        #     iterVar = r'\b' + re.escape(op) + r'\b'
+        #     temp = re.sub(iterVar, ' ', temp)
+        variables = [var for var in re.split(r'\s+', temp) if var and var not in ('(', ')')]
+        # variables = list(set(temp.split()))
+        variables = list(set(variables))
+        #? this is necesary in case an operator is attached to a variable or if it's empty
         for op in operators:
             for var in variables:
                 if op in var:
                     variables.remove(var)
                     new_var = var.replace(op, '')
                     variables.append(new_var)
+                if var == '':
+                    variables.remove(var)
                     
         # print(f"Variables: {variables}")
         return variables
@@ -66,6 +71,43 @@ class LogicalExpression:
     
     def impliesOperator(self, a, b) -> bool:
         return not a or b
+    
+    def parenthesisFinder(self, logicalList: list[str]) -> list[tuple[int, int]]:
+        '''
+        This function will retun a list of tuples with the indexes of the parenthesis in the logicalList, the list is in order of evaluation
+        '''
+        numberOfParenthesis = logicalList.count('(')
+        parenthesisIndexes = []
+        alreadyEvaluatedIdexes = []
+        for i in range(numberOfParenthesis):
+            
+            openIndex = logicalList.index('(')
+            if openIndex in alreadyEvaluatedIdexes:
+                openIndex = logicalList[openIndex+1:].index('(') + openIndex + 1
+            
+            closeIndex = logicalList.index(')')
+            # print(f'closeIndex: {closeIndex}') #!debug
+            if closeIndex in alreadyEvaluatedIdexes:
+                # print('closeIndex in alreadyEvaluatedIdexes') #!debug
+                # print(f'logicalList[closeIndex+1:]: {logicalList[closeIndex+1:]}') #!debug
+                closeIndex = logicalList[closeIndex+1:].index(')') + closeIndex + 1
+
+            #we need to check if there's a opening parenthesis before the closing one
+            condition =  True
+            while condition:
+                condition = False
+                # print(f'openIndex: {openIndex}, closeIndex: {closeIndex}') #!debug
+                # print(f'logicalList[openIndex+1:closeIndex]: {logicalList[openIndex+1:closeIndex]}') #!debug
+                if '(' in logicalList[openIndex+1:closeIndex]:
+                    openIndex = logicalList[openIndex+1:].index('(') + (openIndex+1)
+                    
+                else:
+                    # print('No more opening parenthesis')
+                    condition = False
+            parenthesisIndexes.append((openIndex, closeIndex))
+            alreadyEvaluatedIdexes.append(openIndex)
+            alreadyEvaluatedIdexes.append(closeIndex)
+        return parenthesisIndexes
     #endregion        
     
     def createLogicalList(self) -> list[str]:
@@ -77,7 +119,6 @@ class LogicalExpression:
         for op in operators:
             expression = expression.replace(op, f' {op} ')
         logicalList = expression.split()
-        print(f"Logical list: {logicalList}") #!debug
         return logicalList
         
     def truthTable(self, variables: list[str]) -> pd.DataFrame:
@@ -94,8 +135,14 @@ class LogicalExpression:
         truthTable['result'] = False
         print('truthTable:') #!debug
         print(truthTable) #!debug
+        return truthTable
+    
+    def individualEvaluator(self, variables: list[dict[str, bool]], logicallist: list[str]) -> list[bool]:
+        '''
+        This function will evaluate the logical list with the a given set of variables with defined boolean values
+        '''
         pass
-        
+           
     # def evaluate(self, **kwargs):
     #     try:
     #         # Evaluate the expression with the given variables
@@ -106,16 +153,28 @@ class LogicalExpression:
     #         return None
     
     def debugger(self):
+        print('')
+        print('Debugging:')
+        print('')
         print(f"Expression: {self.expression}")
+        print('step 1:')
         variables = self.getVariables()
+        print(f'Variables: {variables}')
+        print('step 2:')
         operators = self.getOperators()
+        print(f'Operators: {operators}')
+        print('step 3:')
         logicalList = self.createLogicalList()
+        print(f'Logical list: {logicalList}')
+        print('step 4:')
+        parenthesis = self.parenthesisFinder(logicalList)
+        print(f'parenthesis: {parenthesis}')
         self.truthTable(variables)
         
         # self.evaluate(a=True, b=False, c=True)
 
 if __name__ == "__main__":
     # Example usage
-    expr = LogicalExpression("a and (b or not c)")
+    expr = LogicalExpression("a and (b or (not c))")
     expr.debugger()
     # print(f"Expression result: {result}")
