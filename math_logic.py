@@ -22,8 +22,10 @@ class LogicalExpression:
         for op in operators:
             for var in variables:
                 if op in var:
+                    # print(f'var: {var}') #!debug
                     variables.remove(var)
                     new_var = var.replace(op, '')
+                    # print(f'new_var: {new_var}') #!debug
                     variables.append(new_var)
                 if var == '':
                     variables.remove(var)
@@ -80,10 +82,12 @@ class LogicalExpression:
         parenthesisIndexes = []
         alreadyEvaluatedIdexes = []
         for i in range(numberOfParenthesis):
-            
+            # print(f'iteration {i}, alreadyEvaluatedIdexes: {alreadyEvaluatedIdexes}') #!debug
             openIndex = logicalList.index('(')
+            # print(f'openIndex: {openIndex}') #!debug
             if openIndex in alreadyEvaluatedIdexes:
-                openIndex = logicalList[openIndex+1:].index('(') + openIndex + 1
+                # print('hi') #!debug
+                openIndex = logicalList[openIndex+1:].index('(') + openIndex +1
             
             closeIndex = logicalList.index(')')
             # print(f'closeIndex: {closeIndex}') #!debug
@@ -98,8 +102,10 @@ class LogicalExpression:
                 condition = False
                 # print(f'openIndex: {openIndex}, closeIndex: {closeIndex}') #!debug
                 # print(f'logicalList[openIndex+1:closeIndex]: {logicalList[openIndex+1:closeIndex]}') #!debug
-                if '(' in logicalList[openIndex+1:closeIndex]:
-                    openIndex = logicalList[openIndex+1:].index('(') + (openIndex+1)
+                whileIndex = logicalList[openIndex+1:closeIndex].index('(') + openIndex + 1
+                # print(f'whileIndex: {whileIndex}') #!debug
+                if whileIndex != openIndex and whileIndex not in alreadyEvaluatedIdexes:
+                    openIndex = whileIndex
                     
                 else:
                     # print('No more opening parenthesis')
@@ -137,11 +143,27 @@ class LogicalExpression:
         print(truthTable) #!debug
         return truthTable
     
-    def individualEvaluator(self, variables: list[dict[str, bool]], logicallist: list[str]) -> list[bool]:
+    def individualEvaluator(self, variables: list[dict[str, bool]], logicallist: list[str]) -> bool:
         '''
         This function will evaluate the logical list with the a given set of variables with defined boolean values
         '''
-        pass
+        LogicalPriority = ['not', 'and', 'or', '->', '<->', '<-', 'xor']
+        #the first priority is to evalueate the parenthesis
+        parenthesisIndexes = self.parenthesisFinder(logicallist)
+        for indexes in parenthesisIndexes: #this list is in order of evaluation
+            openIndex, closeIndex = indexes
+            subList = logicallist[openIndex+1:closeIndex]
+            print(f'subList: {subList}') #!debug
+            # now we need to evaluate the subList
+            priorityIndexList = []
+            for subIndex, element in enumerate(subList):
+                if element in LogicalPriority:
+                    logicalIndex = LogicalPriority.index(element)
+                    print(f'element: {element}, logicalIndex: {logicalIndex}') #!debug
+                    #now we need a function to evaluate based on the logical index
+            pass
+            
+        
            
     # def evaluate(self, **kwargs):
     #     try:
@@ -170,7 +192,8 @@ class LogicalExpression:
         parenthesis = self.parenthesisFinder(logicalList)
         print(f'parenthesis: {parenthesis}')
         self.truthTable(variables)
-        
+        print('step 5:')
+        self.individualEvaluator([('a', True), ('b', False), ('c', True)], logicalList)
         # self.evaluate(a=True, b=False, c=True)
 
 if __name__ == "__main__":
