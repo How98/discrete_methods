@@ -18,7 +18,7 @@ class LogicalExpression:
         #     temp = re.sub(iterVar, ' ', temp)
         variables = [var for var in re.split(r'\s+', temp) if var and var not in ('(', ')')]
         # variables = list(set(temp.split()))
-        variables = list(set(variables))
+        variables = sorted(list(set(variables)))
         #? this is necesary in case an operator is attached to a variable or if it's empty
         for op in operators:
             for var in variables:
@@ -29,6 +29,8 @@ class LogicalExpression:
                     # print(f'new_var: {new_var}') #!debug
                     variables.append(new_var)
                 if var == '':
+                    variables.remove(var)
+                if var in operators:
                     variables.remove(var)
                     
         # print(f"Variables: {variables}")
