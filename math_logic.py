@@ -14,13 +14,15 @@ class LogicalExpression:
     def getVariables(self) -> list[str]:
         variables = []
         #we need to define the mathematical operators to devide the string input
-        operators = ['+', '-', '*', '/', '(', ')', 'and', 'or', 'not', '->', '<->', '<-', 'xor', 'xand']
+        operators = ['(', ')', 'and', 'or', 'not', '->', '<->', '<-', 'xor', 'xand']
         temp = self.expression
-        # for op in operators:
-        #     iterVar = r'\b' + re.escape(op) + r'\b'
-        #     temp = re.sub(iterVar, ' ', temp)
-        variables = [var for var in re.split(r'\s+', temp) if var and var not in ('(', ')')]
-        # variables = list(set(temp.split()))
+        variables = []
+        for op in operators:
+            temp = temp.replace(op, ' ')
+            temp = temp.replace('  ', ' ')
+        variables = temp.split()
+        # print(f"temp: {temp}") #!
+        # variables = [var for var in re.split(r'\s+', temp) if var and var not in ('(', ')')]
         variables = sorted(list(set(variables)))
         #? this is necesary in case an operator is attached to a variable or if it's empty
         for op in operators:
@@ -43,7 +45,7 @@ class LogicalExpression:
         operators = []
         variables = self.getVariables()        
         #we need to check which operators aperar in the string
-        operator_names = ['+', '-', '*', '/', '(', ')', 'and', 'or', 'not', '->', '<->', '<-', 'xor']
+        operator_names = ['(', ')', 'and', 'or', 'not', '->', '<->', '<-', 'xor']
         expressionWithoutVariablesAndSpaces = self.expression.replace(' ', '')
         for var in variables:
             iterOp = r'\b' + re.escape(var) + r'\b'
@@ -298,7 +300,37 @@ class LogicalExpression:
         print(truthTable)
 
 if __name__ == "__main__":
+    
     # Example usage
-    expr = LogicalExpression("a and (b or (not c))")
+    expr = LogicalExpression("a<-(b or (not c))")
     expr.debugger()
-    # print(f"Expression result: {result}")
+    
+    '''
+    print('##############################################')
+    print('                Math Logic                    ')
+    print('##############################################')
+    print('')
+    print('available operators:')
+    print('and, or, not, ->, <->, <-, xor, xand')
+    print('')
+    print('Example usage: a and (b or (not c))')
+    print('')
+    expression = input('Enter a logical expression: ')
+    expr = LogicalExpression(expression)
+    analysisType = input('Type of analysis (debug = d, evaluate = e, truthTable = tt): ')
+    match analysisType:
+        case 'd':
+            expr.debugger()
+        case 'e':
+            variables = {}
+            for var in expr.variables:
+                value = input(f'Enter value for {var}: ')
+                variables[var] = eval(value)
+            expr.evaluate(variables)
+        case 'tt':
+            truthTable = expr.truthTable()
+            print(truthTable)
+        case __:
+            print('Wrong input')
+            sys.exit(1)
+    '''
