@@ -14,7 +14,7 @@ class LogicalExpression:
     def getVariables(self) -> list[str]:
         variables = []
         #we need to define the mathematical operators to devide the string input
-        operators = ['(', ')', 'and', 'or', 'not', '->', '<->', '<-', 'xor', 'xand']
+        operators = ['(', ')', 'xand', 'xor', 'not', '<->', '->', '<-', 'or', 'and'] #! the order of analysis is important  
         temp = self.expression
         variables = []
         for op in operators:
@@ -45,15 +45,26 @@ class LogicalExpression:
         operators = []
         variables = self.getVariables()        
         #we need to check which operators aperar in the string
-        operator_names = ['(', ')', 'and', 'or', 'not', '->', '<->', '<-', 'xor']
-        expressionWithoutVariablesAndSpaces = self.expression.replace(' ', '')
+        operator_names = ['(', ')', 'xand', 'xor', 'not', '<->', '->', '<-', 'or', 'and'] #! again, the order of detection is really important
+        stringExpression = self.expression
         for var in variables:
-            iterOp = r'\b' + re.escape(var) + r'\b'
-            expressionWithoutVariablesAndSpaces = re.sub(iterOp, '', expressionWithoutVariablesAndSpaces)
+            stringExpression = stringExpression.replace(var, ' ')
         for op in operator_names:
-            if op in expressionWithoutVariablesAndSpaces:
+            if op in stringExpression:
                 operators.append(op)
+                stringExpression = stringExpression.replace(op, ' ').replace('  ', ' ')
+        operators = list(set(operators))
+        operators = sorted(operators, key=lambda x: len(x), reverse=True)
         return operators
+                
+        # expressionWithoutVariablesAndSpaces = self.expression.replace(' ', '')
+        # for var in variables:
+        #     iterOp = r'\b' + re.escape(var) + r'\b'
+        #     expressionWithoutVariablesAndSpaces = re.sub(iterOp, '', expressionWithoutVariablesAndSpaces)
+        # for op in operator_names:
+        #     if op in expressionWithoutVariablesAndSpaces:
+        #         operators.append(op)
+        # return operators
     
     #region Logical operators
     def _andOperator(self, a: bool, b: bool) -> bool:
@@ -202,7 +213,7 @@ class LogicalExpression:
                 return result
             case '<->':
                 expression = logicalList[opereatorIndex-1:opereatorIndex+2]
-                result = self._xorOperator(expression[0], expression[2])
+                result = self._xandOperator(expression[0], expression[2])
                 return result
             case 'xor':
                 expression = logicalList[opereatorIndex-1:opereatorIndex+2]
@@ -302,7 +313,7 @@ class LogicalExpression:
 if __name__ == "__main__":
     
     # Example usage
-    expr = LogicalExpression("a<-(b or (not c))")
+    expr = LogicalExpression("a<->(b or (not c))")
     expr.debugger()
     
     '''
