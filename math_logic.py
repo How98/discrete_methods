@@ -104,28 +104,21 @@ class LogicalExpression:
         parenthesisIndexes = []
         alreadyEvaluatedIdexes = []
         for _ in range(numberOfParenthesis):
-            # print(f'iteration {i}, alreadyEvaluatedIdexes: {alreadyEvaluatedIdexes}') #!debug
             openIndex = logicalList.index('(')
-            # print(f'openIndex: {openIndex}') #!debug
             if openIndex in alreadyEvaluatedIdexes:
-                # print('hi') #!debug
                 openIndex = logicalList[openIndex+1:].index('(') + openIndex +1
             
             closeIndex = logicalList.index(')')
-            # print(f'closeIndex: {closeIndex}') #!debug
             if closeIndex in alreadyEvaluatedIdexes:
-                # print('closeIndex in alreadyEvaluatedIdexes') #!debug
-                # print(f'logicalList[closeIndex+1:]: {logicalList[closeIndex+1:]}') #!debug
                 closeIndex = logicalList[closeIndex+1:].index(')') + closeIndex + 1
 
             #we need to check if there's a opening parenthesis before the closing one
-            condition =  True
+            condition = False   
+            if logicalList[openIndex+1:closeIndex].count('(') > 0:
+                condition =  True
             while condition:
                 condition = False
-                # print(f'openIndex: {openIndex}, closeIndex: {closeIndex}') #!debug
-                # print(f'logicalList[openIndex+1:closeIndex]: {logicalList[openIndex+1:closeIndex]}') #!debug
                 whileIndex = logicalList[openIndex+1:closeIndex].index('(') + openIndex + 1
-                # print(f'whileIndex: {whileIndex}') #!debug
                 if whileIndex != openIndex and whileIndex not in alreadyEvaluatedIdexes:
                     openIndex = whileIndex
                     
@@ -153,20 +146,24 @@ class LogicalExpression:
         '''
         This function will evaluate the logical list with the a given set of variables with defined boolean values
         '''
-        print('individual evaluation') #!debug
+        # print('individual evaluation') #!debug
         logicallist = self._createLogicalList()
         logicallist = self._variablesToBool(variables, logicallist)
-        print(f'logicallist: {logicallist}') #!debug
+        # print(f'logicallist: {logicallist}') #!debug
         #the first priority is to evalueate the parenthesis
         parenthesisIndexes = self._parenthesisFinder()
         for indexes in parenthesisIndexes: #this list is in order of evaluation
             openIndex, closeIndex = indexes
             subList = logicallist[openIndex+1:closeIndex]
+            if len(subList) == 1:
+                logicallist = logicallist[:openIndex] + subList + logicallist[closeIndex+1:]
+                continue
             boolResult = self._logicListEvaluator(subList, variables)
-            logicallist = logicallist[:openIndex] + [boolResult] + logicallist[closeIndex+2:]  
+            logicallist = logicallist[:openIndex] + [boolResult] + logicallist[closeIndex+2:]
+        # print(f'logicallist: {logicallist}') #!debug
         boolResult = self._logicListEvaluator(logicallist, variables)
-        print(f'boolResult: {boolResult}') #!debug
-        print('')
+        # print(f'boolResult: {boolResult}') #!debug
+        # print('')
         return boolResult
     
     def _evaluationOrderIndexes(self, elementList: list) -> list[tuple[int, int]]:
@@ -245,16 +242,19 @@ class LogicalExpression:
                 logicalList = logicalList[:operatorIndex-1] + [boolResult] + logicalList[operatorIndex+2:]
                 return logicalList
     
-    def _logicListEvaluator(self, logicList: list, variables: dict[str, bool]) -> bool:
+    def _logicListEvaluator(self, evaluationList: list, variables: dict[str, bool]) -> bool:
         #new idea
-        operators = self.operators
-        # print(f'operators: {operators}') #!debug
+        operators = []
+        for element in evaluationList:
+            if element in self.operators:
+                operators.append(element)
+        
         for _ in range(len(operators)):
-            priorityIndex = self._maxPriorityIndex(logicList)
-            boolResult = self._operatorEvaluator(logicList[priorityIndex[1]], priorityIndex[1], logicList, variables)
-            logicList = self._replaceBoolResult(logicList, priorityIndex[1], priorityIndex[0], boolResult)
-            print(f'logicList: {logicList}') #!debug
-        return logicList[0]    
+            priorityIndex = self._maxPriorityIndex(evaluationList)
+            boolResult = self._operatorEvaluator(evaluationList[priorityIndex[1]], priorityIndex[1], evaluationList, variables)
+            evaluationList = self._replaceBoolResult(evaluationList, priorityIndex[1], priorityIndex[0], boolResult)
+            # print(f'evaluationList: {evaluationList}') #!debug
+        return evaluationList[0]    
        
     #endregion
     
@@ -266,10 +266,10 @@ class LogicalExpression:
         # combinations = np.array(combinations)
         truthTable = pd.DataFrame(combinations, columns=variables)
         resultArray = []
-        for index, row in truthTable.iterrows():
+        for _, row in truthTable.iterrows():
             variables = dict(row)
             variables = {key: bool(value) for key, value in variables.items()}
-            print('')
+            # print('')
             result = self._individualEvaluator(variables)
             resultArray.append(result)
         truthTable['result'] = resultArray
@@ -319,42 +319,42 @@ class LogicalExpression:
 if __name__ == "__main__":
     
     # Example usage
-    expr = LogicalExpression("a->b and not c")
-    expr.debugger()
+    # expr = LogicalExpression("a->b and not (c or d)")
+    # expr.debugger()
     
     
-    # print('##############################################')
-    # print('                Math Logic                    ')
-    # print('##############################################')
-    # print('')
-    # print('available operators:')
-    # print('and, or, not, ->, <->, <-, xor, xand')
-    # print('')
-    # print('Example usage: a and (b or (not c))')
-    # print('')
-    # expression = input('Enter a logical expression: ')
-    # try:
-    #     expr = LogicalExpression(expression)
-    #     #iternal checking for the expression
-    #     print('Variables: ', expr.variables)
-    #     print('Operators: ', expr.operators)
-    # except Exception as e:
-    #     print(f'wrong input: {e}')
-    #     sys.exit(1)
-    # analysisType = input('Type of analysis (debug = d, evaluate = e, truthTable = tt): ')
-    # match analysisType:
-    #     case 'd':
-    #         expr.debugger()
-    #     case 'e':
-    #         variables = {}
-    #         for var in expr.variables:
-    #             value = input(f'Enter value for {var}: ')
-    #             variables[var] = eval(value)
-    #         expr.evaluate(variables)
-    #     case 'tt':
-    #         truthTable = expr.truthTable()
-    #         print(truthTable)
-    #     case __:
-    #         print('Wrong input')
-    #         sys.exit(1)
+    print('##############################################')
+    print('                Math Logic                    ')
+    print('##############################################')
+    print('')
+    print('available operators:')
+    print('and, or, not, ->, <->, <-, xor, xand')
+    print('')
+    print('Example usage: a and (b or (not c))')
+    print('')
+    expression = input('Enter a logical expression: ')
+    try:
+        expr = LogicalExpression(expression)
+        #iternal checking for the expression
+        print('Variables: ', expr.variables)
+        print('Operators: ', expr.operators)
+    except Exception as e:
+        print(f'wrong input: {e}')
+        sys.exit(1)
+    analysisType = input('Type of analysis (debug = d, evaluate = e, truthTable = tt): ')
+    match analysisType:
+        case 'd':
+            expr.debugger()
+        case 'e':
+            variables = {}
+            for var in expr.variables:
+                value = input(f'Enter value for {var}: ')
+                variables[var] = eval(value)
+            expr.evaluate(variables)
+        case 'tt':
+            truthTable = expr.truthTable()
+            print(truthTable)
+        case __:
+            print('Wrong input')
+            sys.exit(1)
     
